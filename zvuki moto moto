@@ -1,0 +1,40 @@
+-- Este código debería estar en el archivo cargado desde la URL
+
+function playMusicAndLog(soundId, pitch, loopEnabled, volume, webhookUrl)
+    local Workspace = game.Workspace
+
+    -- Reproducir la música
+    for _, v in pairs(Workspace:GetDescendants()) do
+        if v:IsA("RemoteEvent") and v.Name == "AC6_FE_Sounds" then
+            v:FireServer("newSound", "Toefap", Workspace, soundId, pitch, volume, loopEnabled)
+            v:FireServer("playSound", "Toefap")
+        end
+    end
+
+    -- Enviar la información al webhook de Discord
+    local user = game.Players.LocalPlayer.Name  -- Nombre del jugador
+    local userId = game.Players.LocalPlayer.UserId  -- ID del jugador
+    local placeId = game.PlaceId  -- ID del lugar
+    local placeUrl = "https://www.roblox.com/places/" .. placeId  -- Link del lugar
+
+    local data = {
+        ["content"] = user .. " está usando el sistema de música.",
+        ["embeds"] = {
+            {
+                ["title"] = "Detalles del jugador",
+                ["fields"] = {
+                    { ["name"] = "Nombre del jugador", ["value"] = user, ["inline"] = true },
+                    { ["name"] = "ID del jugador", ["value"] = tostring(userId), ["inline"] = true },
+                    { ["name"] = "Link del lugar", ["value"] = placeUrl, ["inline"] = false }
+                }
+            }
+        }
+    }
+
+    -- Realizamos la solicitud POST al webhook de Discord
+    local HttpService = game:GetService("HttpService")
+    local jsonData = HttpService:JSONEncode(data)
+
+    -- Enviar la solicitud al webhook
+    HttpService:PostAsync(webhookUrl, jsonData, Enum.HttpContentType.ApplicationJson)
+end
